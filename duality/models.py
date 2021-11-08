@@ -34,7 +34,7 @@ class DTMI(BaseModel):
         segments = v.split(":")
         for segment in segments:
             if segment[0] in digits:
-                raise pydantic.ValidationError("Segment cannot start with number")
+                raise ValueError("Segment cannot start with number")
             if segment[-1] == "_":
-                raise pydantic.ValidationError("Segment cannot end with underscore")
+                raise ValueError("Segment cannot end with underscore")
         return v
