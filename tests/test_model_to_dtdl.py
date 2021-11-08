@@ -39,6 +39,13 @@ def test_dtmi_invalid_version_number(version):
         DTMI(path="com:adt:dtsample:home", version=version)
 
 
+def test_dtmi_comparison_case_sensitive():
+    string = "dtmi:com:adt:dtsample:home;1"
+    lower = DTMI.from_string(string)
+    upper = DTMI.from_string(string.upper())
+    assert lower != upper
+
+
 @pytest.mark.parametrize(
     "path",
     as_dict={
