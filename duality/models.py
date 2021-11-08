@@ -16,6 +16,13 @@ class DTMI(BaseModel):
         """Construct the Digital Twin Model Identifier."""
         return f"{self.scheme}:{self.path};{self.version}"
 
+    @classmethod
+    def from_string(cls, string: str) -> "DTMI":
+        """Construct a DTMI from a string representation."""
+        scheme, _, rest = string.partition(":")
+        path, _, version = rest.rpartition(";")
+        return DTMI(scheme=scheme, path=path, version=version)
+
     @property
     def segments(self) -> list[str]:
         """Split the path into segments."""

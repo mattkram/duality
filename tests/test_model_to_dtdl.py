@@ -16,6 +16,11 @@ def test_dtmi_string_repr(kwargs):
     assert str(dtmi) == "dtmi:com:adt:dtsample:home;1"
 
 
+def test_dtmi_from_string():
+    dtmi = DTMI.from_string("dtmi:com:adt:dtsample:home;1")
+    assert dtmi == DTMI(schema="dtmi", path="com:adt:dtsample:home", version=1)
+
+
 @pytest.mark.parametrize(
     "path",
     as_dict={
