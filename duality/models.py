@@ -1,4 +1,5 @@
 from string import digits
+from typing import Any
 
 import pydantic
 
@@ -10,7 +11,7 @@ class DTMI(BaseModel):
 
     scheme: str = "dtmi"
     path: str
-    version: str
+    version: int
 
     def __str__(self) -> str:
         """Construct the Digital Twin Model Identifier."""
@@ -38,3 +39,18 @@ class DTMI(BaseModel):
             if segment[-1] == "_":
                 raise ValueError("Segment cannot end with underscore")
         return v
+
+    @pydantic.validator("version", pre=True)
+    def validate_version(cls, v: Any) -> int:
+        """Version must be an integer between [1, 999,999,999], inclusive."""
+        if isinstance(v, str):
+            if v[0] == "0":
+                raise ValueError("Zero-padded version strings are not allowed.")
+            v = float(v)
+        float_val = float(v)
+        int_val = int(v)
+        if int_val != float_val:
+            raise ValueError("Version cannot be a decimal float.")
+        if not (1 <= int_val <= 999_999_999):
+            raise ValueError("Version must be in range [1, 999_999_999], inclusive.")
+        return int_val

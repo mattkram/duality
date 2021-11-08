@@ -8,7 +8,10 @@ from duality.models import DTMI
     "kwargs",
     as_dict={
         "full": dict(scheme="dtmi", path="com:adt:dtsample:home", version=1),
-        "partial": dict(path="com:adt:dtsample:home", version=1),
+        "partial_version_int": dict(path="com:adt:dtsample:home", version=1),
+        "partial_version_float": dict(path="com:adt:dtsample:home", version=1.0),
+        "partial_version_str": dict(path="com:adt:dtsample:home", version="1"),
+        "partial_version_str_float": dict(path="com:adt:dtsample:home", version="1.0"),
     },
 )
 def test_dtmi_string_repr(kwargs):
@@ -19,6 +22,21 @@ def test_dtmi_string_repr(kwargs):
 def test_dtmi_from_string():
     dtmi = DTMI.from_string("dtmi:com:adt:dtsample:home;1")
     assert dtmi == DTMI(schema="dtmi", path="com:adt:dtsample:home", version=1)
+
+
+@pytest.mark.parametrize(
+    "version",
+    as_dict={
+        "too_low": 0,
+        "too_high": 1_000_000_000,
+        "decimal_float": 1.5,
+        "decimal_string": "1.5",
+        "zero-padded_string": "01",
+    },
+)
+def test_dtmi_invalid_version_number(version):
+    with pytest.raises(pydantic.ValidationError):
+        DTMI(path="com:adt:dtsample:home", version=version)
 
 
 @pytest.mark.parametrize(
