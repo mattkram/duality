@@ -62,7 +62,11 @@ def test_dtmi_path_validation(path):
 
 
 def test_model_from_dict():
-    data = {"@id": {"scheme": "dtmi", "path": "com:adt:dtsample:home", "version": 1}}
+    data = {
+        "@id": {"scheme": "dtmi", "path": "com:adt:dtsample:home", "version": 1},
+        "@type": "interface",
+        "@context": "dtmi:dtdl:context;2",
+    }
     interface = Interface(**data)
     assert interface.dict() == data
     assert interface.json() == json.dumps(data)

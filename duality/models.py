@@ -58,3 +58,5 @@ class DTMI(BaseModel):
 
 class Interface(BaseModel):
     id: DTMI = pydantic.Field(alias="@id")
+    type: str = pydantic.Field("interface", alias="@type")
+    context: str = pydantic.Field("dtmi:dtdl:context;2", alias="@context")
