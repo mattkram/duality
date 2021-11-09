@@ -54,3 +54,7 @@ class DTMI(BaseModel):
         if not (1 <= int_val <= 999_999_999):
             raise ValueError("Version must be in range [1, 999_999_999], inclusive.")
         return int_val
+
+
+class Interface(BaseModel):
+    id: DTMI = pydantic.Field(alias="@id")

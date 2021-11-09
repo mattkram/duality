@@ -1,7 +1,10 @@
+import json
+
 import pydantic
 import pytest
 
 from duality.models import DTMI
+from duality.models import Interface
 
 
 @pytest.mark.parametrize(
@@ -56,3 +59,10 @@ def test_dtmi_comparison_case_sensitive():
 def test_dtmi_path_validation(path):
     with pytest.raises(pydantic.ValidationError):
         DTMI(path=path, version=1)
+
+
+def test_model_from_dict():
+    data = {"@id": {"scheme": "dtmi", "path": "com:adt:dtsample:home", "version": 1}}
+    interface = Interface(**data)
+    assert interface.dict() == data
+    assert interface.json() == json.dumps(data)
