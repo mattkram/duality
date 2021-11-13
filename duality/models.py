@@ -1,5 +1,8 @@
 from string import digits
 from typing import Any
+from typing import Optional
+from typing import Set
+from typing import Union
 
 import pydantic
 
@@ -56,7 +59,55 @@ class DTMI(BaseModel):
         return int_val
 
 
-class Interface(BaseModel):
+class IRI(str):
+    pass
+
+
+class Telemetry(BaseModel):
+    ...
+
+
+class Property(BaseModel):
+    ...
+
+
+class Relationship(BaseModel):
+    ...
+
+
+class Schema(str):
+    ...
+
+
+class Command(BaseModel):
+    ...
+
+
+class Component(BaseModel):
+    type: IRI = pydantic.Field(..., alias="@type")
+    name: str = pydantic.Field(
+        ...,
+        min_length=1,
+        max_length=64,
+        regex="^[a-zA-Z](?:[a-zA-Z0-9_]*[a-zA-Z0-9])?$",
+    )
+    schema_: "Interface" = pydantic.Field(..., alias="schema")
     id: DTMI = pydantic.Field(alias="@id")
+    comment: Optional[str] = pydantic.Field(min_length=1, max_length=512)
+    description: Optional[str] = pydantic.Field(min_length=1, max_length=512)
+    displayName: Optional[str] = pydantic.Field(min_length=1, max_length=512)
+
+
+ContentsItem = Union["Telemetry", "Property", "Command", "Relationship", "Component"]
+
+
+class Interface(BaseModel):
+    id: DTMI = pydantic.Field(..., alias="@id")
     type: str = pydantic.Field("interface", alias="@type")
     context: str = pydantic.Field("dtmi:dtdl:context;2", alias="@context")
+    comment: str = ""
+    contents: Optional[Set[ContentsItem]] = pydantic.Field(default_factory=set)
+    description: str = ""
+    displayName: str = ""
+    extends: Set["Interface"] = pydantic.Field(default_factory=set)
+    schemas: Set["Schema"] = pydantic.Field(default_factory=set)

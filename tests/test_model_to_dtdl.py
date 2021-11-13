@@ -68,5 +68,5 @@ def test_model_from_dict():
         "@context": "dtmi:dtdl:context;2",
     }
     interface = Interface(**data)
-    assert interface.dict() == data
-    assert interface.json() == json.dumps(data)
+    assert interface.dict(exclude_unset=True) == data
+    assert interface.json(exclude_unset=True) == json.dumps(data)
