@@ -81,6 +81,11 @@ class DTMI(BaseModel):
             raise ValueError("Version must be in range [1, 999_999_999], inclusive.")
         return int_val
 
+    def __eq__(self, other: Any):
+        if not isinstance(other, (DTMI, str)):
+            return False
+        return str(self) == str(other)
+
 
 class Interface(BaseModel):
     id: DTMI = pydantic.Field(..., alias="@id")
