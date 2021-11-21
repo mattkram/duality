@@ -78,7 +78,7 @@ class BaseModel(pydantic.BaseModel, metaclass=ModelMetaclass):
     def __init_subclass__(
         cls, model_prefix: str = "", model_name: str = "", model_version: int = 1
     ):
-        """Handle ability of subclasses to override """
+        """Handle ability of subclasses to override."""
         cls.model_prefix = model_prefix
         cls.model_name = model_name
         cls.model_version = model_version
