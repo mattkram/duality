@@ -62,7 +62,7 @@ class ModelMetaclass(pydantic.main.ModelMetaclass):
     def id(cls) -> "DTMI":
         return DTMI(
             path=f"{cls.model_prefix}:{cls.model_name}",
-            version=cls.__model_version__,
+            version=cls.model_version,
         )
 
 
@@ -79,9 +79,9 @@ class BaseModel(pydantic.BaseModel, metaclass=ModelMetaclass):
         cls, model_prefix: str = "", model_name: str = "", model_version: int = 1
     ):
         """Handle ability of subclasses to override """
-        cls.__model_prefix__ = model_prefix
-        cls.__model_name__ = model_name
-        cls.__model_version__ = model_version
+        cls.model_prefix = model_prefix
+        cls.model_name = model_name
+        cls.model_version = model_version
 
     @classmethod
     def get_service_client(cls):
