@@ -1,6 +1,6 @@
 import pytest
 
-from duality.base import BaseModel
+from duality.models import BaseModel
 
 
 @pytest.fixture()

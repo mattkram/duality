@@ -3,8 +3,8 @@ import json
 import pydantic
 import pytest
 
-from duality.models import DTMI
-from duality.models import Interface
+from duality.dtdl import DTMI
+from duality.dtdl import Interface
 
 
 @pytest.mark.parametrize(

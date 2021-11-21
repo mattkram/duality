@@ -1,113 +1,35 @@
-from string import digits
-from typing import Any
+import os
 from typing import Optional
-from typing import Set
-from typing import Union
 
-import pydantic
-
-from .base import BaseModel
+from azure.digitaltwins.core import DigitalTwinsClient
+from azure.identity import DefaultAzureCredential
+from pydantic import BaseModel as _BaseModel
 
 
-class DTMI(BaseModel):
-    """https://github.com/Azure/opendigitaltwins-dtdl/blob/master/DTDL/v2/dtdlv2.md#digital-twin-model-identifier"""
+class BaseModel(_BaseModel):
+    """Base model for all models within the duality framework.
 
-    scheme: str = "dtmi"
-    path: str
-    version: int
+    The metaclass of this base class is an "Interface" in the DTDL specification.
 
-    def __str__(self) -> str:
-        """Construct the Digital Twin Model Identifier."""
-        return f"{self.scheme}:{self.path};{self.version}"
+    """
+
+    _service_client: Optional[DigitalTwinsClient] = None
 
     @classmethod
-    def from_string(cls, string: str) -> "DTMI":
-        """Construct a DTMI from a string representation."""
-        scheme, _, rest = string.partition(":")
-        path, _, version = rest.rpartition(";")
-        return DTMI(scheme=scheme, path=path, version=version)
+    def get_service_client(cls):
+        """Construct an Azure Digital Twins client.
 
-    @property
-    def segments(self) -> list[str]:
-        """Split the path into segments."""
-        return self.path.split(":")
+        Reads credentials from the following environment variables, which can be placed in a `.env` file:
 
-    @pydantic.validator("path")
-    def validate_path(cls, v: str) -> str:
-        """Validate the path segments."""
-        segments = v.split(":")
-        for segment in segments:
-            if segment[0] in digits:
-                raise ValueError("Segment cannot start with number")
-            if segment[-1] == "_":
-                raise ValueError("Segment cannot end with underscore")
-        return v
+            * `AZURE_URL`
+            * `AZURE_TENANT_ID`
+            * `AZURE_CLIENT_ID`
+            * `AZURE_CLIENT_SECRET`
 
-    @pydantic.validator("version", pre=True)
-    def validate_version(cls, v: Any) -> int:
-        """Version must be an integer between [1, 999,999,999], inclusive."""
-        if isinstance(v, str):
-            if v[0] == "0":
-                raise ValueError("Zero-padded version strings are not allowed.")
-            v = float(v)
-        float_val = float(v)
-        int_val = int(v)
-        if int_val != float_val:
-            raise ValueError("Version cannot be a decimal float.")
-        if not (1 <= int_val <= 999_999_999):
-            raise ValueError("Version must be in range [1, 999_999_999], inclusive.")
-        return int_val
+        """
+        if cls._service_client is None:
+            url = os.getenv("AZURE_URL", "")
+            credential = DefaultAzureCredential()
+            cls._service_client = DigitalTwinsClient(url, credential)
 
-
-class IRI(str):
-    pass
-
-
-class Telemetry(BaseModel):
-    ...
-
-
-class Property(BaseModel):
-    ...
-
-
-class Relationship(BaseModel):
-    ...
-
-
-class Schema(str):
-    ...
-
-
-class Command(BaseModel):
-    ...
-
-
-class Component(BaseModel):
-    type: IRI = pydantic.Field(..., alias="@type")
-    name: str = pydantic.Field(
-        ...,
-        min_length=1,
-        max_length=64,
-        regex="^[a-zA-Z](?:[a-zA-Z0-9_]*[a-zA-Z0-9])?$",
-    )
-    schema_: "Interface" = pydantic.Field(..., alias="schema")
-    id: DTMI = pydantic.Field(alias="@id")
-    comment: Optional[str] = pydantic.Field(min_length=1, max_length=512)
-    description: Optional[str] = pydantic.Field(min_length=1, max_length=512)
-    displayName: Optional[str] = pydantic.Field(min_length=1, max_length=512)
-
-
-ContentsItem = Union["Telemetry", "Property", "Command", "Relationship", "Component"]
-
-
-class Interface(BaseModel):
-    id: DTMI = pydantic.Field(..., alias="@id")
-    type: str = pydantic.Field("interface", alias="@type")
-    context: str = pydantic.Field("dtmi:dtdl:context;2", alias="@context")
-    comment: str = ""
-    contents: Optional[Set[ContentsItem]] = pydantic.Field(default_factory=set)
-    description: str = ""
-    displayName: str = ""
-    extends: Set["Interface"] = pydantic.Field(default_factory=set)
-    schemas: Set["Schema"] = pydantic.Field(default_factory=set)
+        return cls._service_client
