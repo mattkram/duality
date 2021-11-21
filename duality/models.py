@@ -3,6 +3,7 @@ import re
 from typing import Optional
 
 import pydantic
+from azure.core.exceptions import ResourceExistsError
 from azure.digitaltwins.core import DigitalTwinsClient
 from azure.identity import DefaultAzureCredential
 
@@ -101,3 +102,36 @@ class BaseModel(pydantic.BaseModel, metaclass=ModelMetaclass):
             cls._service_client = DigitalTwinsClient(url, credential)
 
         return cls._service_client
+
+    @classmethod
+    def upload_to_adt(cls, exist_ok=True):
+        sc = cls.get_service_client()
+        try:
+            model = sc.create_models([cls.to_dtdl()])
+        except ResourceExistsError:
+            if not exist_ok:
+                raise
+            return sc.get_model(cls.id)
+        else:
+            return model[0]
+
+    @classmethod
+    def delete_from_adt(cls) -> None:
+        cls.get_service_client().delete_model(cls.id)
+
+    @classmethod
+    def to_dtdl(cls):
+        return {
+            "@id": cls.id,
+            "@type": "Interface",
+            "@context": "dtmi:dtdl:context;2",
+            "displayName": cls.__name__,
+            "contents": [
+                {"@type": "Property", "name": "my_property", "schema": "string"},
+                # {
+                #     "@type": "Telemetry",
+                #     "name": "ComponentTelemetry1",
+                #     "schema": "integer",
+                # },
+            ],
+        }
