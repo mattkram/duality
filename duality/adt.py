@@ -45,3 +45,14 @@ class ADTClient:
 
     def delete_model(self, model: Type[BaseModel]) -> None:
         self.service_client.delete_model(model.id)
+
+    def upload_twin(self, instance: BaseModel) -> BaseModel:
+        def create_instance(_, data, __):
+            return instance.__class__(**data)
+
+        return self.service_client.upsert_digital_twin(
+            instance.id, instance.to_twin_dtdl(), cls=create_instance
+        )
+
+    def delete_twin(self, instance: BaseModel):
+        self.service_client.delete_digital_twin(instance.id)

@@ -1,4 +1,6 @@
 import re
+import uuid
+from typing import Any
 
 import pydantic
 
@@ -69,6 +71,8 @@ class BaseModel(pydantic.BaseModel, metaclass=ModelMetaclass):
 
     """
 
+    id: str = pydantic.Field(alias="$dtId", default_factory=lambda: str(uuid.uuid4()))
+
     def __init_subclass__(
         cls, model_prefix: str = "", model_name: str = "", model_version: int = 1
     ):
@@ -76,6 +80,11 @@ class BaseModel(pydantic.BaseModel, metaclass=ModelMetaclass):
         cls.model_prefix = model_prefix
         cls.model_name = model_name
         cls.model_version = model_version
+
+    @property
+    def model_id(self) -> DTMI:
+        """The DTMI of the model (class-itself)."""
+        return self.__class__.id  # type: ignore
 
     @classmethod
     def to_dtdl(cls):
@@ -93,3 +102,12 @@ class BaseModel(pydantic.BaseModel, metaclass=ModelMetaclass):
                 # },
             ],
         }
+
+    def to_twin_dtdl(self) -> dict[str, Any]:
+        """Return a dtdl representation of the instance."""
+        data = {"$metadata": {"$model": self.model_id}}
+        ignored = {"id"}
+        for key in self.__fields__:
+            if key not in ignored:
+                data[key] = getattr(self, key)
+        return data
