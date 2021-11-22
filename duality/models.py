@@ -6,6 +6,7 @@ from typing import Type
 import pydantic
 
 from duality.dtdl import DTMI
+from duality.dtdl import Interface
 
 
 def camel_to_snake(name):
@@ -97,7 +98,7 @@ class BaseModel(pydantic.BaseModel, metaclass=ModelMetaclass):
         return self.__class__.id  # type: ignore
 
     @classmethod
-    def to_dtdl(cls):
+    def to_interface(cls) -> Interface:
         contents = []
         ignored = {"id"}
 
@@ -112,13 +113,7 @@ class BaseModel(pydantic.BaseModel, metaclass=ModelMetaclass):
                     property_dict["displayName"] = description
                 contents.append(property_dict)
 
-        return {
-            "@id": cls.id,
-            "@type": "Interface",
-            "@context": "dtmi:dtdl:context;2",
-            "displayName": cls.__name__,
-            "contents": contents,
-        }
+        return Interface(id=cls.id, displayName=cls.__name__, contents=contents)
 
     def to_twin_dtdl(self) -> dict[str, Any]:
         """Return a dtdl representation of the instance."""

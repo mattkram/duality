@@ -25,7 +25,7 @@ def test_dtmi_string_repr(kwargs):
 
 def test_dtmi_from_string():
     dtmi = DTMI.from_string("dtmi:com:adt:dtsample:home;1")
-    assert dtmi == DTMI(schema="dtmi", path="com:adt:dtsample:home", version=1)
+    assert dtmi == DTMI(scheme="dtmi", path="com:adt:dtsample:home", version=1)
 
 
 @pytest.mark.parametrize(
@@ -40,7 +40,7 @@ def test_dtmi_from_string():
 )
 def test_dtmi_invalid_version_number(version):
     with pytest.raises(pydantic.ValidationError):
-        DTMI(path="com:adt:dtsample:home", version=version)
+        Interface(id="dtmi:com:adt:dtsample:home;{version}")
 
 
 def test_dtmi_comparison_case_sensitive():
@@ -59,7 +59,7 @@ def test_dtmi_comparison_case_sensitive():
 )
 def test_dtmi_path_validation(path):
     with pytest.raises(pydantic.ValidationError):
-        DTMI(path=path, version=1)
+        Interface(id=DTMI(path=path, version=1))
 
 
 def test_interface_from_dict():
@@ -68,12 +68,17 @@ def test_interface_from_dict():
         "@type": "Interface",
         "@context": "dtmi:dtdl:context;2",
     }
+    expected = {
+        "@id": "dtmi:com:adt:dtsample:home;1",
+        "@type": "Interface",
+        "@context": "dtmi:dtdl:context;2",
+    }
     interface = Interface(**data)
     assert interface.id == "dtmi:com:adt:dtsample:home;1"
     assert interface.type == "Interface"
     assert interface.context == "dtmi:dtdl:context;2"
-    assert interface.dict(exclude_unset=True) == data
-    assert interface.json(exclude_unset=True) == json.dumps(data)
+    assert interface.dict(exclude_unset=True) == expected
+    assert interface.json(exclude_unset=True) == json.dumps(expected)
 
 
 def test_property_from_dict():

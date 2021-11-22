@@ -35,7 +35,7 @@ class ADTClient:
     def upload_model(self, model: Type[BaseModel], exist_ok=True):
         sc = self.service_client
         try:
-            adt_model = sc.create_models([model.to_dtdl()])
+            adt_model = sc.create_models([model.to_interface().dict()])
         except ResourceExistsError:
             if not exist_ok:
                 raise

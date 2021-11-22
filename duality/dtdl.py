@@ -1,50 +1,80 @@
 """Base pydantic models (schemas) to handle serialization/deserialization of ADT."""
 from string import digits
 from typing import Any
+from typing import List
 from typing import Optional
-from typing import Set
+from typing import Tuple
 from typing import Union
 
 import pydantic
 
 
 class BaseModel(pydantic.BaseModel):
-    def dict(self, *args: Any, by_alias: bool = True, **kwargs: Any) -> dict[str, Any]:
+    class Config:
+        allow_population_by_field_name = True
+
+    def dict(self, *args: Any, **kwargs: Any) -> dict[str, Any]:
         """Override to always use field alias."""
-        return super().dict(*args, by_alias=by_alias, **kwargs)
+        kwargs.setdefault("by_alias", True)
+        kwargs.setdefault("exclude_none", True)
+        return super().dict(*args, **kwargs)
 
-    def json(self, *args: Any, by_alias: bool = True, **kwargs: Any) -> str:
+    def json(self, *args: Any, **kwargs: Any) -> str:
         """Override to always use field alias."""
-        return super().json(*args, by_alias=by_alias, **kwargs)
+        kwargs.setdefault("by_alias", True)
+        kwargs.setdefault("exclude_none", True)
+        return super().json(*args, **kwargs)
 
 
-class DTMI(BaseModel):
+class DTMI(str):
     """https://github.com/Azure/opendigitaltwins-dtdl/blob/master/DTDL/v2/dtdlv2.md#digital-twin-model-identifier"""
 
-    scheme: str = "dtmi"
-    path: str
-    version: int
+    def __new__(
+        cls,
+        /,
+        string: str = None,
+        *,
+        scheme: str = "dtmi",
+        path: str = "",
+        version: int = 1,
+    ):
+        """Allow construction via keywords, or just as a string.
+        e.g. DTMI("dtmi:path;1") == DTMI(scheme="dtmi", path="path", version=1)
+        """
+        if string is not None:
+            return str(string)
+        version = int(float(version))
+        return f"{scheme}:{path};{version}"
 
-    def __str__(self) -> str:
-        """Construct the Digital Twin Model Identifier."""
-        return f"{self.scheme}:{self.path};{self.version}"
+    @classmethod
+    def parts_from_string(cls, string) -> Tuple[str, str, str]:
+        scheme, _, rest = string.partition(":")
+        path, _, version = rest.rpartition(";")
+        return scheme, path, version
 
     @classmethod
     def from_string(cls, string: str) -> "DTMI":
         """Construct a DTMI from a string representation."""
-        scheme, _, rest = string.partition(":")
-        path, _, version = rest.rpartition(";")
-        return DTMI(scheme=scheme, path=path, version=version)
+        return cls(string)
 
-    @property
-    def segments(self) -> list[str]:
-        """Split the path into segments."""
-        return self.path.split(":")
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate_dict
+        yield cls.validate_path
+        yield cls.validate_version
 
-    @pydantic.validator("path")
-    def validate_path(cls, v: str) -> str:
+    @classmethod
+    def validate_dict(cls, v: Any) -> "DTMI":
+        """Convert a dictionary to a DTMI object"""
+        if isinstance(v, dict):
+            return DTMI(**v)
+        return v
+
+    @classmethod
+    def validate_path(cls, v: "DTMI") -> "DTMI":
         """Validate the path segments."""
-        segments = v.split(":")
+        _, path, _ = cls.parts_from_string(v)
+        segments = path.split(":")
         for segment in segments:
             if segment[0] in digits:
                 raise ValueError("Segment cannot start with number")
@@ -52,20 +82,21 @@ class DTMI(BaseModel):
                 raise ValueError("Segment cannot end with underscore")
         return v
 
-    @pydantic.validator("version", pre=True)
-    def validate_version(cls, v: Any) -> int:
+    @classmethod
+    def validate_version(cls, v: Any) -> "DTMI":
         """Version must be an integer between [1, 999,999,999], inclusive."""
-        if isinstance(v, str):
-            if v[0] == "0":
+        scheme, path, version = cls.parts_from_string(v)
+        if isinstance(version, str):
+            if version[0] == "0":
                 raise ValueError("Zero-padded version strings are not allowed.")
-            v = float(v)
-        float_val = float(v)
-        int_val = int(v)
+            version = float(version)  # type: ignore
+        float_val = float(version)
+        int_val = int(version)
         if int_val != float_val:
             raise ValueError("Version cannot be a decimal float.")
         if not (1 <= int_val <= 999_999_999):
             raise ValueError("Version must be in range [1, 999_999_999], inclusive.")
-        return int_val
+        return DTMI(scheme=scheme, path=path, version=int_val)
 
     def __eq__(self, other: Any):
         if not isinstance(other, (DTMI, str)):
@@ -127,11 +158,11 @@ ContentsItem = Union[
 
 class Interface(BaseModel):
     id: DTMI = pydantic.Field(..., alias="@id")
-    type: str = pydantic.Field("interface", alias="@type")
+    type: str = pydantic.Field("Interface", alias="@type")
     context: str = pydantic.Field("dtmi:dtdl:context;2", alias="@context")
     comment: str = ""
-    contents: Optional[Set[ContentsItem]] = pydantic.Field(default_factory=set)
+    contents: Optional[List[ContentsItem]] = pydantic.Field(default_factory=list)
     description: str = ""
     displayName: str = ""
-    extends: Set["Interface"] = pydantic.Field(default_factory=set)
-    schemas: Set["Schema"] = pydantic.Field(default_factory=set)
+    extends: List["Interface"] = pydantic.Field(default_factory=list)
+    schemas: List["Schema"] = pydantic.Field(default_factory=list)

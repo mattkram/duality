@@ -3,6 +3,7 @@ from typing import Type
 
 import pytest
 
+from duality.dtdl import Interface
 from duality.models import BaseModel
 
 
@@ -18,3 +19,17 @@ def model_class() -> Generator[Type[BaseModel], None, None]:
 
 def test_model_class_id(model_class):
     assert model_class.id == "dtmi:duality:my_model;2"
+
+
+def test_model_class_to_dtdl(model_class):
+    assert model_class.to_interface() == Interface(
+        id="dtmi:duality:my_model;2",
+        contents=[
+            {
+                "@type": "Property",
+                "name": "my_property",
+                "schema": "string",
+            }
+        ],
+        displayName="MyModel",
+    )
