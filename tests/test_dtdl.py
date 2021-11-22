@@ -5,6 +5,7 @@ import pytest
 
 from duality.dtdl import DTMI
 from duality.dtdl import Interface
+from duality.dtdl import Property
 
 
 @pytest.mark.parametrize(
@@ -61,12 +62,27 @@ def test_dtmi_path_validation(path):
         DTMI(path=path, version=1)
 
 
-def test_model_from_dict():
+def test_interface_from_dict():
     data = {
         "@id": {"scheme": "dtmi", "path": "com:adt:dtsample:home", "version": 1},
-        "@type": "interface",
+        "@type": "Interface",
         "@context": "dtmi:dtdl:context;2",
     }
     interface = Interface(**data)
+    assert interface.id == "dtmi:com:adt:dtsample:home;1"
+    assert interface.type == "Interface"
+    assert interface.context == "dtmi:dtdl:context;2"
     assert interface.dict(exclude_unset=True) == data
     assert interface.json(exclude_unset=True) == json.dumps(data)
+
+
+def test_property_from_dict():
+    data = {
+        "@type": "Property",
+        "name": "my_property",
+        "schema": "string",
+        "displayName": "My Property",
+    }
+    property = Property(**data)
+    assert property.type == "Property"
+    assert property.dict() == data

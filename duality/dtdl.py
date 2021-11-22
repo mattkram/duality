@@ -7,29 +7,15 @@ from typing import Union
 
 import pydantic
 
-ContentsItem = Union["Telemetry", "Property", "Command", "Relationship", "Component"]
-
 
 class BaseModel(pydantic.BaseModel):
+    def dict(self, *args: Any, by_alias: bool = True, **kwargs: Any) -> dict[str, Any]:
+        """Override to always use field alias."""
+        return super().dict(*args, by_alias=by_alias, **kwargs)
 
-    _special_fields: dict[str, str] = {}  # mapping of name to alias
-
-    def __init_subclass__(cls, **kwargs: Any) -> None:
-        """Capture any field with an alias starting with @, so we can use those aliases in dict()."""
-        cls._special_fields = {}
-        for name, field in cls.__fields__.items():
-            if field.alias.startswith("@"):
-                cls._special_fields[name] = field.alias
-
-    def dict(self, *args: Any, **kwargs: Any) -> dict[str, Any]:
-        """Generate the dictionary representation, with handling of special fields."""
-        result = {}
-        for key, value in super().dict(*args, **kwargs).items():
-            if key in self._special_fields:
-                key = self._special_fields[key]
-            result[key] = value
-
-        return result
+    def json(self, *args: Any, by_alias: bool = True, **kwargs: Any) -> str:
+        """Override to always use field alias."""
+        return super().json(*args, by_alias=by_alias, **kwargs)
 
 
 class DTMI(BaseModel):
@@ -87,18 +73,6 @@ class DTMI(BaseModel):
         return str(self) == str(other)
 
 
-class Interface(BaseModel):
-    id: DTMI = pydantic.Field(..., alias="@id")
-    type: str = pydantic.Field("interface", alias="@type")
-    context: str = pydantic.Field("dtmi:dtdl:context;2", alias="@context")
-    comment: str = ""
-    contents: Optional[Set["ContentsItem"]] = pydantic.Field(default_factory=set)
-    description: str = ""
-    displayName: str = ""
-    extends: Set["Interface"] = pydantic.Field(default_factory=set)
-    schemas: Set["Schema"] = pydantic.Field(default_factory=set)
-
-
 class IRI(str):
     pass
 
@@ -108,7 +82,10 @@ class Telemetry(BaseModel):
 
 
 class Property(BaseModel):
-    ...
+    type: str = pydantic.Field("Property", alias="@type")
+    name: str
+    schema_: str = pydantic.Field(alias="schema")
+    displayName: Optional[str]
 
 
 class Relationship(BaseModel):
@@ -137,3 +114,24 @@ class Component(BaseModel):
     description: Optional[str] = pydantic.Field(min_length=1, max_length=512)
     displayName: Optional[str] = pydantic.Field(min_length=1, max_length=512)
     # id: Optional[UUID] = pydantic.Field(alias="@dtId")
+
+
+ContentsItem = Union[
+    # "Telemetry",
+    "Property",
+    # "Command",
+    # "Relationship",
+    # "Component",
+]
+
+
+class Interface(BaseModel):
+    id: DTMI = pydantic.Field(..., alias="@id")
+    type: str = pydantic.Field("interface", alias="@type")
+    context: str = pydantic.Field("dtmi:dtdl:context;2", alias="@context")
+    comment: str = ""
+    contents: Optional[Set[ContentsItem]] = pydantic.Field(default_factory=set)
+    description: str = ""
+    displayName: str = ""
+    extends: Set["Interface"] = pydantic.Field(default_factory=set)
+    schemas: Set["Schema"] = pydantic.Field(default_factory=set)
