@@ -69,6 +69,8 @@ def get_schema(field_type: Type) -> str:
     """Generate a schema string for a python field type."""
     if field_type == str:
         return "string"
+    if field_type == int:
+        return "integer"
     raise ValueError(f"Cannot handle field of type {field_type} yet")
 
 
@@ -101,13 +103,14 @@ class BaseModel(pydantic.BaseModel, metaclass=ModelMetaclass):
 
         for name, field in cls.__fields__.items():
             if name not in ignored:
-                contents.append(
-                    {
-                        "@type": "Property",
-                        "name": name,
-                        "schema": get_schema(field.type_),
-                    }
-                )
+                property_dict = {
+                    "@type": "Property",
+                    "name": name,
+                    "schema": get_schema(field.type_),
+                }
+                if description := field.field_info.description:
+                    property_dict["displayName"] = description
+                contents.append(property_dict)
 
         return {
             "@id": cls.id,

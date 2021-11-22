@@ -1,3 +1,4 @@
+import pydantic
 import pytest
 
 from duality.adt import ADTClient
@@ -15,6 +16,7 @@ def model_class():
 
     class MyModel(BaseModel, model_prefix="duality"):
         my_property: str
+        my_named_int_property: int = pydantic.Field(description="My Named Property")
 
     yield MyModel
 
@@ -37,7 +39,7 @@ def test_upload_model(model_class, uploaded_model_class):
 
 @pytest.fixture()
 def model_instance(model_class):
-    return model_class(my_property="My Value")
+    return model_class(my_property="My Value", my_named_int_property=42)
 
 
 @pytest.fixture()
@@ -51,3 +53,4 @@ def test_upload_twin(model_instance, uploaded_twin):
     assert model_instance is not uploaded_twin  # different instances
     assert model_instance.id == uploaded_twin.id
     assert model_instance.my_property == uploaded_twin.my_property
+    assert model_instance.my_named_int_property == uploaded_twin.my_named_int_property
