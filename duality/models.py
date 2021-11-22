@@ -7,6 +7,7 @@ import pydantic
 
 from duality.dtdl import DTMI
 from duality.dtdl import Interface
+from duality.dtdl import Property
 
 
 def camel_to_snake(name):
@@ -104,14 +105,12 @@ class BaseModel(pydantic.BaseModel, metaclass=ModelMetaclass):
 
         for name, field in cls.__fields__.items():
             if name not in ignored:
-                property_dict = {
-                    "@type": "Property",
-                    "name": name,
-                    "schema": get_schema(field.type_),
-                }
-                if description := field.field_info.description:
-                    property_dict["displayName"] = description
-                contents.append(property_dict)
+                prop = Property(
+                    name=name,
+                    schema=get_schema(field.type_),
+                    displayName=field.field_info.description,
+                )
+                contents.append(prop)
 
         return Interface(id=cls.id, displayName=cls.__name__, contents=contents)
 
