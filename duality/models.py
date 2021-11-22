@@ -1,6 +1,7 @@
 import re
 import uuid
 from typing import Any
+from typing import Type
 
 import pydantic
 
@@ -64,6 +65,13 @@ class ModelMetaclass(pydantic.main.ModelMetaclass):
         )
 
 
+def get_schema(field_type: Type) -> str:
+    """Generate a schema string for a python field type."""
+    if field_type == str:
+        return "string"
+    raise ValueError(f"Cannot handle field of type {field_type} yet")
+
+
 class BaseModel(pydantic.BaseModel, metaclass=ModelMetaclass):
     """Base model for all models within the duality framework.
 
@@ -88,19 +96,25 @@ class BaseModel(pydantic.BaseModel, metaclass=ModelMetaclass):
 
     @classmethod
     def to_dtdl(cls):
+        contents = []
+        ignored = {"id"}
+
+        for name, field in cls.__fields__.items():
+            if name not in ignored:
+                contents.append(
+                    {
+                        "@type": "Property",
+                        "name": name,
+                        "schema": get_schema(field.type_),
+                    }
+                )
+
         return {
             "@id": cls.id,
             "@type": "Interface",
             "@context": "dtmi:dtdl:context;2",
             "displayName": cls.__name__,
-            "contents": [
-                {"@type": "Property", "name": "my_property", "schema": "string"},
-                # {
-                #     "@type": "Telemetry",
-                #     "name": "ComponentTelemetry1",
-                #     "schema": "integer",
-                # },
-            ],
+            "contents": contents,
         }
 
     def to_twin_dtdl(self) -> dict[str, Any]:
