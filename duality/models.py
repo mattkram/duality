@@ -1,11 +1,6 @@
-import os
 import re
-from typing import Optional
 
 import pydantic
-from azure.core.exceptions import ResourceExistsError
-from azure.digitaltwins.core import DigitalTwinsClient
-from azure.identity import DefaultAzureCredential
 
 from duality.dtdl import DTMI
 
@@ -74,8 +69,6 @@ class BaseModel(pydantic.BaseModel, metaclass=ModelMetaclass):
 
     """
 
-    _service_client: Optional[DigitalTwinsClient] = None
-
     def __init_subclass__(
         cls, model_prefix: str = "", model_name: str = "", model_version: int = 1
     ):
@@ -83,41 +76,6 @@ class BaseModel(pydantic.BaseModel, metaclass=ModelMetaclass):
         cls.model_prefix = model_prefix
         cls.model_name = model_name
         cls.model_version = model_version
-
-    @classmethod
-    def get_service_client(cls):
-        """Construct an Azure Digital Twins client.
-
-        Reads credentials from the following environment variables, which can be placed in a `.env` file:
-
-            * `AZURE_URL`
-            * `AZURE_TENANT_ID`
-            * `AZURE_CLIENT_ID`
-            * `AZURE_CLIENT_SECRET`
-
-        """
-        if cls._service_client is None:
-            url = os.getenv("AZURE_URL", "")
-            credential = DefaultAzureCredential()
-            cls._service_client = DigitalTwinsClient(url, credential)
-
-        return cls._service_client
-
-    @classmethod
-    def upload_to_adt(cls, exist_ok=True):
-        sc = cls.get_service_client()
-        try:
-            model = sc.create_models([cls.to_dtdl()])
-        except ResourceExistsError:
-            if not exist_ok:
-                raise
-            return sc.get_model(cls.id)
-        else:
-            return model[0]
-
-    @classmethod
-    def delete_from_adt(cls) -> None:
-        cls.get_service_client().delete_model(cls.id)
 
     @classmethod
     def to_dtdl(cls):
