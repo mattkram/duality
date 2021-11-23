@@ -9,7 +9,7 @@ from typing import Union
 import pydantic
 
 
-class BaseModel(pydantic.BaseModel):
+class _BaseModel(pydantic.BaseModel):
     class Config:
         allow_population_by_field_name = True
 
@@ -108,18 +108,18 @@ class IRI(str):
     pass
 
 
-class Telemetry(BaseModel):
+class Telemetry(_BaseModel):
     ...
 
 
-class Property(BaseModel):
+class Property(_BaseModel):
     type: str = pydantic.Field("Property", alias="@type")
     name: str
     schema_: str = pydantic.Field(alias="schema")
     displayName: Optional[str]
 
 
-class Relationship(BaseModel):
+class Relationship(_BaseModel):
     ...
 
 
@@ -127,11 +127,11 @@ class Schema(str):
     ...
 
 
-class Command(BaseModel):
+class Command(_BaseModel):
     ...
 
 
-class Component(BaseModel):
+class Component(_BaseModel):
     type: IRI = pydantic.Field(..., alias="@type")
     name: str = pydantic.Field(
         ...,
@@ -156,7 +156,7 @@ ContentsItem = Union[
 ]
 
 
-class Interface(BaseModel):
+class Interface(_BaseModel):
     id: DTMI = pydantic.Field(..., alias="@id")
     type: str = pydantic.Field("Interface", alias="@type")
     context: str = pydantic.Field("dtmi:dtdl:context;2", alias="@context")
