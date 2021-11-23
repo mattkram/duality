@@ -85,6 +85,8 @@ class BaseModel(pydantic.BaseModel, metaclass=ModelMetaclass):
 
     id: str = pydantic.Field(alias="$dtId", default_factory=lambda: str(uuid.uuid4()))
 
+    _class_registry: dict[str, Type["BaseModel"]] = {}
+
     def __init_subclass__(
         cls, model_prefix: str = "", model_name: str = "", model_version: int = 1
     ):
@@ -92,6 +94,7 @@ class BaseModel(pydantic.BaseModel, metaclass=ModelMetaclass):
         cls.model_prefix = model_prefix
         cls.model_name = model_name
         cls.model_version = model_version
+        cls._class_registry[cls.id] = cls
 
     @property
     def model_id(self) -> DTMI:
@@ -113,6 +116,13 @@ class BaseModel(pydantic.BaseModel, metaclass=ModelMetaclass):
                 contents.append(prop)
 
         return Interface(id=cls.id, displayName=cls.__name__, contents=contents)
+
+    @classmethod
+    def from_twin_dtdl(cls, **data) -> "BaseModel":
+        """Construct an object based on ADT response data, using the class registry."""
+        model_id = data["$metadata"]["$model"]
+        class_ = cls._class_registry[model_id]
+        return class_(**data)
 
     def to_twin_dtdl(self) -> dict[str, Any]:
         """Return a dtdl representation of the instance."""

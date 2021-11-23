@@ -1,4 +1,5 @@
 import os
+from typing import Generator
 from typing import Type
 
 from azure.core.exceptions import ResourceExistsError
@@ -6,6 +7,48 @@ from azure.digitaltwins.core import DigitalTwinsClient
 from azure.identity import DefaultAzureCredential
 
 from duality.models import BaseModel
+
+
+class ADTQuery:
+    def __init__(self, client: DigitalTwinsClient):
+        self._client = client
+        self._selector = "*"
+        self._wheres: list[str] = []
+
+    def _execute(self):
+        clauses = [
+            f"SELECT {self._selector}",
+            "FROM digitaltwins",
+        ]
+        if self._wheres:
+            clauses.append("WHERE")
+            for where in self._wheres:
+                clauses.append(where)
+                clauses.append("AND")
+            clauses.pop(-1)
+
+        query_string = " ".join(clauses)
+        return self._client.query_twins(query_string)
+
+    def of_model(self, model_class: Type[BaseModel], exact: bool = False):
+        """Filter results to return instances of a single model type."""
+        if exact:
+            clause = f"IS_OF_MODEL('{model_class.id}', exact)"
+        else:
+            clause = f"IS_OF_MODEL('{model_class.id}')"
+        self._wheres.append(clause)
+        return self
+
+    def count(self) -> int:
+        """Return the number of objects returned by the query."""
+        self._selector = "COUNT()"
+        result = next(self._execute())
+        return result["COUNT"]
+
+    def all(self) -> Generator[BaseModel, None, None]:
+        """Return a generator of all objects returned by the query."""
+        for data in self._execute():
+            yield BaseModel.from_twin_dtdl(**data)
 
 
 class ADTClient:
@@ -31,6 +74,10 @@ class ADTClient:
             self._service_client = DigitalTwinsClient(url, credential)
 
         return self._service_client
+
+    @property
+    def query(self) -> ADTQuery:
+        return ADTQuery(self.service_client)
 
     def upload_model(self, model: Type[BaseModel], exist_ok=True):
         sc = self.service_client
