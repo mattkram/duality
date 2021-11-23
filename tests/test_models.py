@@ -17,11 +17,11 @@ def model_class() -> Generator[Type[BaseModel], None, None]:
     yield MyModel
 
 
-def test_model_class_id(model_class):
+def test_model_class_id(model_class: Type[BaseModel]) -> None:
     assert model_class.id == "dtmi:duality:my_model;2"
 
 
-def test_model_class_to_dtdl(model_class):
+def test_model_class_to_dtdl(model_class: Type[BaseModel]) -> None:
     assert model_class.to_interface() == Interface(
         id="dtmi:duality:my_model;2",
         contents=[

@@ -1,7 +1,9 @@
 import os
 from typing import Any
 from typing import Generator
+from typing import Generic
 from typing import Type
+from typing import TypeVar
 
 from azure.core.exceptions import ResourceExistsError
 from azure.core.paging import ItemPaged
@@ -11,8 +13,10 @@ from azure.identity import DefaultAzureCredential
 
 from duality.models import BaseModel
 
+T = TypeVar("T", bound=BaseModel)
 
-class ADTQuery:
+
+class ADTQuery(Generic[T]):
     def __init__(self, client: DigitalTwinsClient):
         self._client = client
         self._selector = "*"
@@ -33,7 +37,7 @@ class ADTQuery:
         query_string = " ".join(clauses)
         return self._client.query_twins(query_string)
 
-    def of_model(self, model_class: Type[BaseModel], exact: bool = False) -> "ADTQuery":
+    def of_model(self, model_class: Type[T], exact: bool = False) -> "ADTQuery":
         """Filter results to return instances of a single model type."""
         if exact:
             clause = f"IS_OF_MODEL('{model_class.id}', exact)"
@@ -51,10 +55,10 @@ class ADTQuery:
             raise TypeError(f"Received count of {count} is not an integer")
         return count
 
-    def all(self) -> Generator[BaseModel, None, None]:
+    def all(self) -> Generator[T, None, None]:
         """Return a generator of all objects returned by the query."""
         for data in self._execute():
-            yield BaseModel.from_twin_dtdl(**data)
+            yield BaseModel.from_twin_dtdl(**data)  # type:ignore
 
 
 class ADTClient:

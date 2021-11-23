@@ -1,4 +1,6 @@
 import json
+from typing import Any
+from typing import Union
 
 import pydantic
 import pytest
@@ -17,13 +19,13 @@ from duality.dtdl import Property
         "partial_version_str": dict(path="com:adt:dtsample:home", version="1"),
         "partial_version_str_float": dict(path="com:adt:dtsample:home", version="1.0"),
     },
-)
-def test_dtmi_string_repr(kwargs):
+)  # type: ignore
+def test_dtmi_string_repr(kwargs: dict[str, Any]) -> None:
     dtmi = DTMI(**kwargs)
     assert str(dtmi) == "dtmi:com:adt:dtsample:home;1"
 
 
-def test_dtmi_from_string():
+def test_dtmi_from_string() -> None:
     dtmi = DTMI.from_string("dtmi:com:adt:dtsample:home;1")
     assert dtmi == DTMI(scheme="dtmi", path="com:adt:dtsample:home", version=1)
 
@@ -37,13 +39,13 @@ def test_dtmi_from_string():
         "decimal_string": "1.5",
         "zero-padded_string": "01",
     },
-)
-def test_dtmi_invalid_version_number(version):
+)  # type: ignore
+def test_dtmi_invalid_version_number(version: Union[int, float, str]) -> None:
     with pytest.raises(pydantic.ValidationError):
         Interface(id="dtmi:com:adt:dtsample:home;{version}")
 
 
-def test_dtmi_comparison_case_sensitive():
+def test_dtmi_comparison_case_sensitive() -> None:
     string = "dtmi:com:adt:dtsample:home;1"
     lower = DTMI.from_string(string)
     upper = DTMI.from_string(string.upper())
@@ -56,13 +58,13 @@ def test_dtmi_comparison_case_sensitive():
         "leading_number": "com:1something:dtsample:home",
         "trailing_underscore": "com:something_:dtsample:home",
     },
-)
-def test_dtmi_path_validation(path):
+)  # type: ignore
+def test_dtmi_path_validation(path: str) -> None:
     with pytest.raises(pydantic.ValidationError):
         Interface(id=DTMI(path=path, version=1))
 
 
-def test_interface_from_dict():
+def test_interface_from_dict() -> None:
     data = {
         "@id": {"scheme": "dtmi", "path": "com:adt:dtsample:home", "version": 1},
         "@type": "Interface",
@@ -81,7 +83,7 @@ def test_interface_from_dict():
     assert interface.json(exclude_unset=True) == json.dumps(expected)
 
 
-def test_property_from_dict():
+def test_property_from_dict() -> None:
     data = {
         "@type": "Property",
         "name": "my_property",

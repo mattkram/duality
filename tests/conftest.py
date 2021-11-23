@@ -1,7 +1,7 @@
 import pytest
 
 
-def _monkey_patch_parametrize():
+def _monkey_patch_parametrize() -> None:
     """Monkeypatch parametrize to add `as_dict` argument.
 
     Not a fixture since needs to occur during import.
@@ -9,8 +9,8 @@ def _monkey_patch_parametrize():
     """
     _orig_parametrize = pytest.mark.parametrize
 
-    def _new_parametrize(*args, as_dict=None, **kwargs):
-        def wrapped(f):
+    def _new_parametrize(*args, as_dict=None, **kwargs):  # type: ignore
+        def wrapped(f):  # type: ignore
             if as_dict is not None:
                 kwargs["ids"] = as_dict.keys()
                 kwargs["argvalues"] = as_dict.values()
