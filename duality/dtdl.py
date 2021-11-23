@@ -1,6 +1,8 @@
 """Base pydantic models (schemas) to handle serialization/deserialization of ADT."""
 from string import digits
 from typing import Any
+from typing import Callable
+from typing import Generator
 from typing import List
 from typing import Optional
 from typing import Tuple
@@ -37,17 +39,17 @@ class DTMI(str):
         scheme: str = "dtmi",
         path: str = "",
         version: int = 1,
-    ):
+    ) -> "DTMI":
         """Allow construction via keywords, or just as a string.
         e.g. DTMI("dtmi:path;1") == DTMI(scheme="dtmi", path="path", version=1)
         """
         if string is not None:
-            return str(string)
+            return str(string)  # type: ignore
         version = int(float(version))
-        return f"{scheme}:{path};{version}"
+        return f"{scheme}:{path};{version}"  # type: ignore
 
     @classmethod
-    def parts_from_string(cls, string) -> Tuple[str, str, str]:
+    def parts_from_string(cls, string: str) -> Tuple[str, str, str]:
         scheme, _, rest = string.partition(":")
         path, _, version = rest.rpartition(";")
         return scheme, path, version
@@ -58,7 +60,7 @@ class DTMI(str):
         return cls(string)
 
     @classmethod
-    def __get_validators__(cls):
+    def __get_validators__(cls) -> Generator[Callable[[Any], "DTMI"], None, None]:
         yield cls.validate_dict
         yield cls.validate_path
         yield cls.validate_version
@@ -98,7 +100,7 @@ class DTMI(str):
             raise ValueError("Version must be in range [1, 999_999_999], inclusive.")
         return DTMI(scheme=scheme, path=path, version=int_val)
 
-    def __eq__(self, other: Any):
+    def __eq__(self, other: Any) -> bool:
         if not isinstance(other, (DTMI, str)):
             return False
         return str(self) == str(other)

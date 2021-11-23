@@ -10,7 +10,7 @@ from duality.dtdl import Interface
 from duality.dtdl import Property
 
 
-def camel_to_snake(name):
+def camel_to_snake(name: str) -> str:
     name = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
     return re.sub("([a-z0-9])([A-Z])", r"\1_\2", name).lower()
 
@@ -118,7 +118,7 @@ class BaseModel(pydantic.BaseModel, metaclass=ModelMetaclass):
         return Interface(id=cls.id, displayName=cls.__name__, contents=contents)
 
     @classmethod
-    def from_twin_dtdl(cls, **data) -> "BaseModel":
+    def from_twin_dtdl(cls, **data: Any) -> "BaseModel":
         """Construct an object based on ADT response data, using the class registry."""
         model_id = data["$metadata"]["$model"]
         class_ = cls._class_registry[model_id]

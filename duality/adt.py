@@ -1,9 +1,12 @@
 import os
+from typing import Any
 from typing import Generator
 from typing import Type
 
 from azure.core.exceptions import ResourceExistsError
+from azure.core.paging import ItemPaged
 from azure.digitaltwins.core import DigitalTwinsClient
+from azure.digitaltwins.core import DigitalTwinsModelData
 from azure.identity import DefaultAzureCredential
 
 from duality.models import BaseModel
@@ -15,7 +18,7 @@ class ADTQuery:
         self._selector = "*"
         self._wheres: list[str] = []
 
-    def _execute(self):
+    def _execute(self) -> ItemPaged[dict[str, object]]:
         clauses = [
             f"SELECT {self._selector}",
             "FROM digitaltwins",
@@ -30,7 +33,7 @@ class ADTQuery:
         query_string = " ".join(clauses)
         return self._client.query_twins(query_string)
 
-    def of_model(self, model_class: Type[BaseModel], exact: bool = False):
+    def of_model(self, model_class: Type[BaseModel], exact: bool = False) -> "ADTQuery":
         """Filter results to return instances of a single model type."""
         if exact:
             clause = f"IS_OF_MODEL('{model_class.id}', exact)"
@@ -43,7 +46,10 @@ class ADTQuery:
         """Return the number of objects returned by the query."""
         self._selector = "COUNT()"
         result = next(self._execute())
-        return result["COUNT"]
+        count = result["COUNT"]
+        if not isinstance(count, int):
+            raise TypeError(f"Received count of {count} is not an integer")
+        return count
 
     def all(self) -> Generator[BaseModel, None, None]:
         """Return a generator of all objects returned by the query."""
@@ -79,7 +85,9 @@ class ADTClient:
     def query(self) -> ADTQuery:
         return ADTQuery(self.service_client)
 
-    def upload_model(self, model: Type[BaseModel], exist_ok=True):
+    def upload_model(
+        self, model: Type[BaseModel], exist_ok: bool = True
+    ) -> DigitalTwinsModelData:
         sc = self.service_client
         try:
             adt_model = sc.create_models([model.to_interface().dict()])
@@ -94,12 +102,12 @@ class ADTClient:
         self.service_client.delete_model(model.id)
 
     def upload_twin(self, instance: BaseModel) -> BaseModel:
-        def create_instance(_, data, __):
+        def create_instance(_: Any, data: Any, __: Any) -> BaseModel:
             return instance.__class__(**data)
 
         return self.service_client.upsert_digital_twin(
             instance.id, instance.to_twin_dtdl(), cls=create_instance
         )
 
-    def delete_twin(self, instance: BaseModel):
+    def delete_twin(self, instance: BaseModel) -> None:
         self.service_client.delete_digital_twin(instance.id)
