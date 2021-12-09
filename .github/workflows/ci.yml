@@ -68,6 +68,11 @@ jobs:
               --cov planingfsi \
               tests
         if: ${{ always() }}
+        env:
+          AZURE_URL: ${{ secrets.AZURE_URL }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
 #      - name: Publish code coverage
 #        run: |
 #          poetry run codecov -t $CODECOV_TOKEN
