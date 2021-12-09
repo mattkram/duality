@@ -4,6 +4,7 @@ from typing import Generator
 from typing import Generic
 from typing import Type
 from typing import TypeVar
+from typing import Union
 
 from azure.core.exceptions import ResourceExistsError
 from azure.core.paging import ItemPaged
@@ -12,6 +13,7 @@ from azure.digitaltwins.core import DigitalTwinsModelData
 from azure.identity import DefaultAzureCredential
 
 from duality.models import BaseModel
+from duality.models import ModelMetaclass
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -102,7 +104,7 @@ class ADTClient:
         else:
             return adt_model[0]
 
-    def delete_model(self, model: Type[BaseModel]) -> None:
+    def delete_model(self, model: Union[Type[BaseModel], ModelMetaclass]) -> None:
         self.service_client.delete_model(model.id)
 
     def upload_twin(self, instance: BaseModel) -> BaseModel:
