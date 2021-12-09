@@ -107,8 +107,9 @@ class BaseModel(pydantic.BaseModel, metaclass=ModelMetaclass):
         contents = []
         ignored = {"id"}
 
+        base_fields = cls.__base__.__fields__  # type: ignore
         for name, field in cls.__fields__.items():
-            if name not in ignored:
+            if name not in ignored and name not in base_fields:
                 prop = Property(
                     name=name,
                     schema=get_schema(field.type_),

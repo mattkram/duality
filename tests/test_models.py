@@ -45,11 +45,6 @@ def test_child_model_to_dtdl() -> None:
         contents=[
             {
                 "@type": "Property",
-                "name": "my_property",
-                "schema": "string",
-            },
-            {
-                "@type": "Property",
                 "name": "my_other_property",
                 "schema": "string",
             },
