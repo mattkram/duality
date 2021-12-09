@@ -1,6 +1,7 @@
 import re
 import uuid
 from typing import Any
+from typing import Optional
 from typing import Type
 
 import pydantic
@@ -116,10 +117,9 @@ class BaseModel(pydantic.BaseModel, metaclass=ModelMetaclass):
                 contents.append(prop)
 
         base = cls.__base__
+        extends: Optional[str] = None
         if issubclass(base, BaseModel) and base != BaseModel:
             extends = base.id
-        else:
-            extends = ""
 
         return Interface(
             id=cls.id, displayName=cls.__name__, contents=contents, extends=extends

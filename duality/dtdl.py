@@ -166,5 +166,5 @@ class Interface(_BaseModel):
     contents: Optional[List[ContentsItem]] = pydantic.Field(default_factory=list)
     description: str = ""
     displayName: str = ""
-    extends: str = ""
+    extends: Optional[DTMI] = None
     schemas: List["Schema"] = pydantic.Field(default_factory=list)
