@@ -115,7 +115,15 @@ class BaseModel(pydantic.BaseModel, metaclass=ModelMetaclass):
                 )
                 contents.append(prop)
 
-        return Interface(id=cls.id, displayName=cls.__name__, contents=contents)
+        base = cls.__base__
+        if issubclass(base, BaseModel) and base != BaseModel:
+            extends = base.id
+        else:
+            extends = ""
+
+        return Interface(
+            id=cls.id, displayName=cls.__name__, contents=contents, extends=extends
+        )
 
     @classmethod
     def from_twin_dtdl(cls, **data: Any) -> "BaseModel":
