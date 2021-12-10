@@ -1,3 +1,4 @@
+import datetime
 import re
 import uuid
 from typing import Any
@@ -10,6 +11,18 @@ import pydantic
 from duality.dtdl import DTMI
 from duality.dtdl import Interface
 from duality.dtdl import Property
+
+# A mapping of Python types to DTDL primitive schemas
+PRIMITIVE_SCHEMA_MAP: Dict[Type, str] = {
+    str: "string",
+    int: "integer",
+    float: "double",
+    bool: "boolean",
+    datetime.date: "date",
+    datetime.datetime: "dateTime",
+    datetime.time: "time",
+    datetime.timedelta: "duration",
+}
 
 
 def camel_to_snake(name: str) -> str:
@@ -69,13 +82,12 @@ class ModelMetaclass(pydantic.main.ModelMetaclass):
         )
 
 
-def get_schema(field_type: Type) -> str:
+def _get_schema(field_type: Type) -> str:
     """Generate a schema string for a python field type."""
-    if field_type == str:
-        return "string"
-    if field_type == int:
-        return "integer"
-    raise ValueError(f"Cannot handle field of type {field_type} yet")
+    try:
+        return PRIMITIVE_SCHEMA_MAP[field_type]
+    except KeyError:
+        raise ValueError(f"Cannot handle field of type {field_type} yet")
 
 
 class BaseModel(pydantic.BaseModel, metaclass=ModelMetaclass):
@@ -113,7 +125,7 @@ class BaseModel(pydantic.BaseModel, metaclass=ModelMetaclass):
             if name not in ignored and name not in base_fields:
                 prop = Property(
                     name=name,
-                    schema=get_schema(field.type_),
+                    schema=_get_schema(field.type_),
                     displayName=field.field_info.description,
                 )
                 contents.append(prop)

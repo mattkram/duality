@@ -1,3 +1,4 @@
+import datetime
 from typing import Type
 
 import pytest
@@ -7,11 +8,18 @@ from duality.models import BaseModel
 
 
 class MyModel(BaseModel, model_prefix="duality", model_version=2):
-    my_property: str
+    my_parent_property: str
 
 
 class MyChildModel(MyModel, model_prefix="duality:child", model_version=1):
-    my_other_property: str
+    my_string_property: str
+    my_int_property: int
+    my_float_property: float
+    my_bool_property: bool
+    my_date_property: datetime.date
+    my_datetime_property: datetime.datetime
+    my_time_property: datetime.time
+    my_timedelta_property: datetime.timedelta
 
 
 @pytest.mark.parametrize(
@@ -31,7 +39,7 @@ def test_model_class_to_dtdl() -> None:
         contents=[
             {
                 "@type": "Property",
-                "name": "my_property",
+                "name": "my_parent_property",
                 "schema": "string",
             }
         ],
@@ -40,15 +48,51 @@ def test_model_class_to_dtdl() -> None:
 
 
 def test_child_model_to_dtdl() -> None:
-    assert MyChildModel.to_interface() == Interface(
+    interface = Interface(
         id="dtmi:duality:child:my_child_model;1",
         contents=[
             {
                 "@type": "Property",
-                "name": "my_other_property",
+                "name": "my_string_property",
                 "schema": "string",
+            },
+            {
+                "@type": "Property",
+                "name": "my_int_property",
+                "schema": "integer",
+            },
+            {
+                "@type": "Property",
+                "name": "my_float_property",
+                "schema": "double",
+            },
+            {
+                "@type": "Property",
+                "name": "my_bool_property",
+                "schema": "boolean",
+            },
+            {
+                "@type": "Property",
+                "name": "my_date_property",
+                "schema": "date",
+            },
+            {
+                "@type": "Property",
+                "name": "my_datetime_property",
+                "schema": "dateTime",
+            },
+            {
+                "@type": "Property",
+                "name": "my_time_property",
+                "schema": "time",
+            },
+            {
+                "@type": "Property",
+                "name": "my_timedelta_property",
+                "schema": "duration",
             },
         ],
         extends="dtmi:duality:my_model;2",
         displayName="MyChildModel",
     )
+    assert MyChildModel.to_dict() == interface.dict()
