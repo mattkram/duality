@@ -1,6 +1,7 @@
 import re
 import uuid
 from typing import Any
+from typing import Dict
 from typing import Optional
 from typing import Type
 
@@ -125,6 +126,11 @@ class BaseModel(pydantic.BaseModel, metaclass=ModelMetaclass):
         return Interface(
             id=cls.id, displayName=cls.__name__, contents=contents, extends=extends
         )
+
+    @classmethod
+    def to_dict(cls) -> Dict[str, Any]:
+        """Return the class interface as a DTDL schema dictionary."""
+        return cls.to_interface().dict()
 
     @classmethod
     def from_twin_dtdl(cls, **data: Any) -> "BaseModel":
