@@ -8,6 +8,7 @@ import pytest
 from duality.dtdl import DTMI
 from duality.dtdl import Interface
 from duality.dtdl import Property
+from duality.dtdl import Relationship
 
 
 @pytest.mark.parametrize(
@@ -93,3 +94,15 @@ def test_property_from_dict() -> None:
     property = Property(**data)
     assert property.type == "Property"
     assert property.dict() == data
+
+
+def test_relationship_from_dict() -> None:
+    relationship = Relationship(
+        name="my_relationship",
+        target="dtmi:com:adt:dtsample:home;1",
+        id="dtmi:com:adt:dtsample:relationship;1",
+    )
+    assert relationship.id == "dtmi:com:adt:dtsample:relationship;1"
+    assert relationship.type == "Relationship"
+    assert relationship.name == "my_relationship"
+    assert relationship.target == "dtmi:com:adt:dtsample:home;1"

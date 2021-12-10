@@ -124,7 +124,17 @@ class Property(_BaseModel):
 
 
 class Relationship(_BaseModel):
-    ...
+    type: str = pydantic.Field("Relationship", alias="@type")
+    name: str
+    id: Optional[DTMI]
+    comment: Optional[str]
+    description: Optional[str]
+    displayName: Optional[str]
+    maxMultiplicity: Optional[int] = pydantic.Field(gt=1)
+    minMultiplicity: Optional[int]
+    properties: Optional[List[Property]]
+    target: Optional[DTMI]
+    writable: Optional[bool]
 
 
 class Schema(str):
@@ -155,7 +165,7 @@ ContentsItem = Union[
     # "Telemetry",
     "Property",
     # "Command",
-    # "Relationship",
+    "Relationship",
     # "Component",
 ]
 
