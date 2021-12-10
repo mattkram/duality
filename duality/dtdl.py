@@ -76,6 +76,8 @@ class DTMI(str):
     def validate_path(cls, v: "DTMI") -> "DTMI":
         """Validate the path segments."""
         _, path, _ = cls.parts_from_string(v)
+        if not path:
+            raise ValueError("Path must have at least one ':'")
         segments = path.split(":")
         for segment in segments:
             if segment[0] in digits:
