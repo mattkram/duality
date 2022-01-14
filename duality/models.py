@@ -100,14 +100,28 @@ class BaseModel(pydantic.BaseModel, metaclass=ModelMetaclass):
 
     class_registry: ClassVar[dict[str, Type["BaseModel"]]] = {}
 
+    __ignore_during_export__: ClassVar[bool] = False
+
     def __init_subclass__(
-        cls, model_prefix: str = "", model_name: str = "", model_version: int = 1
+        cls,
+        model_prefix: str = "",
+        model_name: str = "",
+        model_version: int = 1,
+        root: bool = False,
+        ignore: bool = False,
     ):
         """Handle ability of subclasses to override."""
         cls.model_prefix = model_prefix
         cls.model_name = model_name
         cls.model_version = model_version
-        cls.class_registry[cls.id] = cls
+        cls.__ignore_during_export__ = ignore
+
+        if root:
+            # Define a new model root by giving it its own empty registry
+            cls.class_registry = {}
+
+        if not ignore:
+            cls.class_registry[cls.id] = cls
 
     @property
     def model_id(self) -> dtdl.DTMI:
@@ -138,7 +152,11 @@ class BaseModel(pydantic.BaseModel, metaclass=ModelMetaclass):
 
         base = cls.__base__
         extends: Optional[str] = None
-        if issubclass(base, BaseModel) and base != BaseModel:
+        if (
+            issubclass(base, BaseModel)
+            and base != BaseModel
+            and not base.__ignore_during_export__
+        ):
             extends = base.id
 
         return dtdl.Interface(
