@@ -25,7 +25,7 @@ PRIMITIVE_SCHEMA_MAP: Dict[Type, str] = {
 }
 
 
-def camel_to_snake(name: str) -> str:
+def _camel_to_snake(name: str) -> str:
     name = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
     return re.sub("([a-z0-9])([A-Z])", r"\1_\2", name).lower()
 
@@ -60,7 +60,7 @@ class ModelMetaclass(pydantic.main.ModelMetaclass):
         """The model name is either specified on the class, or is the snake-case version of the class name."""
         if cls.__model_name__:
             return cls.__model_name__
-        return camel_to_snake(cls.__name__)
+        return _camel_to_snake(cls.__name__)
 
     @model_name.setter
     def model_name(cls, value: str) -> None:
