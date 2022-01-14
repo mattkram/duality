@@ -3,7 +3,6 @@ import re
 import uuid
 from typing import Any
 from typing import ClassVar
-from typing import Dict
 from typing import Optional
 from typing import Type
 from typing import Union
@@ -13,7 +12,7 @@ import pydantic
 from duality import dtdl
 
 # A mapping of Python types to DTDL primitive schemas
-PRIMITIVE_SCHEMA_MAP: Dict[Type, str] = {
+PRIMITIVE_SCHEMA_MAP: dict[Type, str] = {
     str: "string",
     int: "integer",
     float: "double",
@@ -147,7 +146,7 @@ class BaseModel(pydantic.BaseModel, metaclass=ModelMetaclass):
         )
 
     @classmethod
-    def to_dict(cls) -> Dict[str, Any]:
+    def to_dict(cls) -> dict[str, Any]:
         """Return the class interface as a DTDL schema dictionary."""
         return cls.to_interface().dict()
 
