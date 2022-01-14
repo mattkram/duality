@@ -5,11 +5,10 @@ repos:
     -   id: check-yaml
     -   id: end-of-file-fixer
     -   id: trailing-whitespace
--   repo: https://github.com/asottile/reorder_python_imports
-    rev: v2.6.0
+-   repo: https://github.com/pycqa/isort
+    rev: 5.10.1
     hooks:
-    -   id: reorder-python-imports
-        args: [ --py37-plus, --application-directories=.:apps/bigbend ]
+    -   id: isort
 -   repo: https://github.com/psf/black
     rev: 21.11b1
     hooks:
