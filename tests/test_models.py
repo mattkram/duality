@@ -5,6 +5,7 @@ import pytest
 
 from duality.dtdl import Interface
 from duality.models import BaseModel
+from duality.models import Relationship
 
 
 class MyModel(BaseModel, model_prefix="duality", model_version=2):
@@ -20,6 +21,10 @@ class MyChildModel(MyModel, model_prefix="duality:child", model_version=1):
     my_datetime_property: datetime.datetime
     my_time_property: datetime.time
     my_timedelta_property: datetime.timedelta
+
+
+class MyRelatedModel(BaseModel, model_prefix="duality:related", model_version=1):
+    relationship_to_child: MyChildModel = Relationship()  # type: ignore
 
 
 @pytest.mark.parametrize(
@@ -96,3 +101,21 @@ def test_child_model_to_dtdl() -> None:
         displayName="MyChildModel",
     )
     assert MyChildModel.to_dict() == interface.dict()
+
+
+def test_related_model_to_dtdl() -> None:
+    """A model can contain a relationship to another one, which adds a relationship
+    to the DTDL contents, whose target is the other model.
+    """
+    interface = Interface(
+        id="dtmi:duality:related:my_related_model;1",
+        contents=[
+            {
+                "@type": "Relationship",
+                "name": "relationship_to_child",
+                "target": str(MyChildModel.id),
+            },
+        ],
+        displayName="MyRelatedModel",
+    )
+    assert MyRelatedModel.to_dict() == interface.dict()

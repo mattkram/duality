@@ -5,12 +5,11 @@ from typing import Any
 from typing import Dict
 from typing import Optional
 from typing import Type
+from typing import Union
 
 import pydantic
 
-from duality.dtdl import DTMI
-from duality.dtdl import Interface
-from duality.dtdl import Property
+from duality import dtdl
 
 # A mapping of Python types to DTDL primitive schemas
 PRIMITIVE_SCHEMA_MAP: Dict[Type, str] = {
@@ -75,8 +74,8 @@ class ModelMetaclass(pydantic.main.ModelMetaclass):
         cls.__model_version__ = int(value)
 
     @property
-    def id(cls) -> "DTMI":
-        return DTMI(
+    def id(cls) -> dtdl.DTMI:
+        return dtdl.DTMI(
             path=f"{cls.model_prefix}:{cls.model_name}",
             version=cls.model_version,
         )
@@ -111,31 +110,38 @@ class BaseModel(pydantic.BaseModel, metaclass=ModelMetaclass):
         cls._class_registry[cls.id] = cls
 
     @property
-    def model_id(self) -> DTMI:
+    def model_id(self) -> dtdl.DTMI:
         """The DTMI of the model (class-itself)."""
         return self.__class__.id  # type: ignore
 
     @classmethod
-    def to_interface(cls) -> Interface:
-        contents = []
+    def to_interface(cls) -> dtdl.Interface:
+        contents: list[Union[dtdl.Property, dtdl.Relationship]] = []
         ignored = {"id"}
 
         base_fields = cls.__base__.__fields__  # type: ignore
         for name, field in cls.__fields__.items():
             if name not in ignored and name not in base_fields:
-                prop = Property(
-                    name=name,
-                    schema=_get_schema(field.type_),
-                    displayName=field.field_info.description,
-                )
-                contents.append(prop)
+                if isinstance(field.default, Relationship):
+                    relationship = dtdl.Relationship(
+                        name=name,
+                        target=field.type_.id,
+                    )
+                    contents.append(relationship)
+                else:
+                    prop = dtdl.Property(
+                        name=name,
+                        schema=_get_schema(field.type_),
+                        displayName=field.field_info.description,
+                    )
+                    contents.append(prop)
 
         base = cls.__base__
         extends: Optional[str] = None
         if issubclass(base, BaseModel) and base != BaseModel:
             extends = base.id
 
-        return Interface(
+        return dtdl.Interface(
             id=cls.id, displayName=cls.__name__, contents=contents, extends=extends
         )
 
@@ -159,3 +165,10 @@ class BaseModel(pydantic.BaseModel, metaclass=ModelMetaclass):
             if key not in ignored:
                 data[key] = getattr(self, key)
         return data
+
+
+class Relationship:
+    """A relationship from one Model to another."""
+
+    # TODO: Relationship should be able to be inherited from, such that sub-types can
+    #  define attributes that can be stored on the relationships (i.e. edges) themselves.
