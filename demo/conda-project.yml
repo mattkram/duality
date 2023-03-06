@@ -1,0 +1,7 @@
+name: demo
+environments:
+  default:
+    - environment.yml
+variables: {}
+commands:
+  notebook: jupyter notebook Duality_demo_2021-12-10.ipynb
