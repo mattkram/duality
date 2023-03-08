@@ -1,30 +1,42 @@
-[tool.poetry]
+[build-system]
+requires = ["setuptools", "setuptools-scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
 name = "duality"
-version = "0.1.0"
 description = ""
-authors = ["Matt Kramer <mkramer@anaconda.com>"]
+authors = [
+    {name = "Matt Kramer", email = "mkramer@anaconda.com"},
+]
+license = {text = "BSD-3-Clause"}
+readme = "README.md"
+requires-python = ">=3.9"
+dynamic = ["version"]
+dependencies = [
+    "azure-digitaltwins-core>=1.1.0",
+    "azure-identity>=1.7.1",
+    "python-dotenv>=0.19.2",
+    "pydantic>=1.8.2",
+    "rich>=10.14.0",
+]
 
-[tool.poetry.dependencies]
-python = "^3.9"
+[project.optional-dependencies]
+dev = [
+    "black",
+    "flaky",
+    "mypy",
+    "pytest",
+    "pytest-cov",
+]
 
-azure-digitaltwins-core = "^1.1.0"
-azure-identity = "^1.7.1"
-python-dotenv = "^0.19.2"
-pydantic = "^1.8.2"
-rich = "^10.14.0"
-
-[tool.poetry.dev-dependencies]
-black = "21.11b1"
-flaky = "^3.7.0"
-mypy = "^0.910"
-pytest = "^6.2.5"
-pytest-cov = "^3.0.0"
+[tool.distutils.bdist_wheel]
+universal = true
 
 [tool.isort]
 profile = "black"
 #multi_line_output = 3  # Allow multiple imports on a line, but split when too long
 force_single_line = true
 
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+[tool.setuptools_scm]
+version_scheme = "post-release"
+
