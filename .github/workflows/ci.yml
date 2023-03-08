@@ -21,11 +21,11 @@ jobs:
         run: pip install .
       - name: Test with pytest
         run: |
-          pip install pytest
+          pip install pytest pytest-cov
           pytest \
               --junitxml=./test-reports/junit.xml \
               --cov-report xml:./test-reports/coverage.xml \
-              --cov planingfsi \
+              --cov duality \
               tests
         if: ${{ always() }}
         env:
