@@ -21,7 +21,7 @@ jobs:
         run: pip install .
       - name: Test with pytest
         run: |
-          pip install pytest pytest-cov
+          pip install pytest pytest-cov flaky
           pytest \
               --junitxml=./test-reports/junit.xml \
               --cov-report xml:./test-reports/coverage.xml \
