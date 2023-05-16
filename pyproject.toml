@@ -39,4 +39,3 @@ force_single_line = true
 
 [tool.setuptools_scm]
 version_scheme = "post-release"
-
