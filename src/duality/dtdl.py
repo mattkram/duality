@@ -1,4 +1,5 @@
 """Base pydantic models (schemas) to handle serialization/deserialization of ADT."""
+
 from string import digits
 from typing import Any
 from typing import Callable
@@ -112,8 +113,7 @@ class IRI(str):
     pass
 
 
-class Telemetry(_BaseModel):
-    ...
+class Telemetry(_BaseModel): ...
 
 
 class Property(_BaseModel):
@@ -137,12 +137,10 @@ class Relationship(_BaseModel):
     writable: Optional[bool]
 
 
-class Schema(str):
-    ...
+class Schema(str): ...
 
 
-class Command(_BaseModel):
-    ...
+class Command(_BaseModel): ...
 
 
 class Component(_BaseModel):
